@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #eee;
+      transition: background 0.5s;
+    }
+
+    body.break-mode { background: #16213e; }
+
+    .container {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 300;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+
+    .mode-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .mode-tab {
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ccc;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .mode-tab:hover { background: rgba(255, 255, 255, 0.15); }
+    .mode-tab.active {
+      background: #e94560;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    body.break-mode .mode-tab.active { background: #0f3460; }
+
+    .timer-ring {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .timer-ring svg {
+      transform: rotate(-90deg);
+      width: 280px;
+      height: 280px;
+    }
+
+    .timer-ring circle {
+      fill: none;
+      stroke-width: 6;
+    }
+
+    .ring-bg { stroke: rgba(255, 255, 255, 0.08); }
+
+    .ring-progress {
+      stroke: #e94560;
+      stroke-linecap: round;
+      stroke-dasharray: 829.38;
+      stroke-dashoffset: 0;
+      transition: stroke 0.5s;
+    }
+
+    body.break-mode .ring-progress { stroke: #0f3460; }
+
+    .timer-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 4rem;
+      font-weight: 200;
+      letter-spacing: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      width: 56px;
+      height: 56px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { transform: scale(1.1); }
+    .btn:active { transform: scale(0.95); }
+
+    .btn-start {
+      background: #e94560;
+      width: 72px;
+      height: 72px;
+    }
+
+    body.break-mode .btn-start { background: #0f3460; }
+
+    .btn-start svg { fill: #fff; width: 28px; height: 28px; }
+
+    .btn-reset {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-reset svg { fill: #aaa; width: 22px; height: 22px; }
+
+    .btn-skip {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-skip svg { fill: #aaa; width: 22px; height: 22px; }
+
+    .session-count {
+      font-size: 0.9rem;
+      opacity: 0.5;
+      letter-spacing: 2px;
+    }
+
+    .clocks {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+
+    .clock-time {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clock-label {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pomodoro</h1>
+
+    <div class="clocks" id="clocks"></div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="work">Work</button>
+      <button class="mode-tab" data-mode="short">Short Break</button>
+      <button class="mode-tab" data-mode="long">Long Break</button>
+    </div>
+
+    <div class="timer-ring">
+      <svg viewBox="0 0 280 280">
+        <circle class="ring-bg" cx="140" cy="140" r="132"/>
+        <circle class="ring-progress" cx="140" cy="140" r="132"/>
+      </svg>
+      <div class="timer-display">25:00</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-reset" title="Reset">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18a6 6 0 1 1 0-12c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+      <button class="btn btn-start" title="Start">
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="btn btn-skip" title="Skip">
+        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6v12h2V6h-2z"/></svg>
+      </button>
+    </div>
+
+    <div class="session-count">Sessions: <span id="count">0</span></div>
+  </div>
+
+  <script>
+    const MODES = {
+      work: 25 * 60,
+      short: 5 * 60,
+      long: 15 * 60,
+    };
+
+    const CIRCUMFERENCE = 2 * Math.PI * 132;
+
+    let currentMode = 'work';
+    let totalSeconds = MODES.work;
+    let remainingSeconds = totalSeconds;
+    let running = false;
+    let interval = null;
+    let sessions = 0;
+
+    const display = document.querySelector('.timer-display');
+    const progress = document.querySelector('.ring-progress');
+    const btnStart = document.querySelector('.btn-start');
+    const iconPlay = document.querySelector('.icon-play');
+    const iconPause = document.querySelector('.icon-pause');
+    const countEl = document.getElementById('count');
+    const tabs = document.querySelectorAll('.mode-tab');
+
+    progress.style.strokeDasharray = CIRCUMFERENCE;
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      display.textContent = formatTime(remainingSeconds);
+      const fraction = 1 - remainingSeconds / totalSeconds;
+      progress.style.strokeDashoffset = fraction * CIRCUMFERENCE;
+      document.title = `${formatTime(remainingSeconds)} — Pomodoro`;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      totalSeconds = MODES[mode];
+      remainingSeconds = totalSeconds;
+      stop();
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+      document.body.classList.toggle('break-mode', mode !== 'work');
+      updateDisplay();
+    }
+
+    function start() {
+      running = true;
+      iconPlay.style.display = 'none';
+      iconPause.style.display = 'block';
+      interval = setInterval(() => {
+        remainingSeconds--;
+        updateDisplay();
+        if (remainingSeconds <= 0) {
+          stop();
+          onComplete();
+        }
+      }, 1000);
+    }
+
+    function stop() {
+      running = false;
+      iconPlay.style.display = 'block';
+      iconPause.style.display = 'none';
+      clearInterval(interval);
+      interval = null;
+    }
+
+    function onComplete() {
+      if (Notification.permission === 'granted') {
+        new Notification('Pomodoro', {
+          body: currentMode === 'work' ? 'Time for a break!' : 'Back to work!',
+        });
+      }
+      if (currentMode === 'work') {
+        sessions++;
+        countEl.textContent = sessions;
+        setMode(sessions % 4 === 0 ? 'long' : 'short');
+      } else {
+        setMode('work');
+      }
+    }
+
+    btnStart.addEventListener('click', () => running ? stop() : start());
+
+    document.querySelector('.btn-reset').addEventListener('click', () => {
+      remainingSeconds = totalSeconds;
+      stop();
+      updateDisplay();
+    });
+
+    document.querySelector('.btn-skip').addEventListener('click', () => {
+      stop();
+      onComplete();
+    });
+
+    tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.mode)));
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    updateDisplay();
+
+    const TIMEZONES = [
+      { zone: 'Pacific/Honolulu', label: 'HST' },
+      { zone: 'America/Anchorage', label: 'AKST' },
+      { zone: 'America/Los_Angeles', label: 'PST' },
+      { zone: 'America/Denver', label: 'MST' },
+      { zone: 'America/Chicago', label: 'CST' },
+      { zone: 'America/New_York', label: 'EST' },
+      { zone: 'Africa/Cairo', label: 'Cairo' },
+    ];
+
+    const clocksEl = document.getElementById('clocks');
+    TIMEZONES.forEach(tz => {
+      const div = document.createElement('div');
+      div.className = 'clock-item';
+      div.innerHTML = `<span class="clock-time"></span><span class="clock-label">${tz.label}</span>`;
+      div.dataset.zone = tz.zone;
+      clocksEl.appendChild(div);
+    });
+
+    function updateClocks() {
+      const now = new Date();
+      document.querySelectorAll('.clock-item').forEach(el => {
+        const time = now.toLocaleString('en-US', {
+          timeZone: el.dataset.zone,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        });
+        el.querySelector('.clock-time').textContent = time;
+      });
+    }
+    updateClocks();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
