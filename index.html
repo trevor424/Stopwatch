@@ -188,6 +188,116 @@
       letter-spacing: 2px;
       margin-bottom: 2rem;
     }
+
+    /* Break Game */
+    .game-wrapper {
+      display: none;
+      margin: 1.5rem auto;
+      max-width: 400px;
+    }
+
+    .game-wrapper.visible { display: block; }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .game-board {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    .game-target {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #e94560;
+      cursor: pointer;
+      transform: scale(0);
+      animation: popIn 0.2s forwards;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      user-select: none;
+      box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
+    }
+
+    .game-target.golden {
+      background: #f0c040;
+      box-shadow: 0 0 25px rgba(240, 192, 64, 0.5);
+    }
+
+    @keyframes popIn {
+      to { transform: scale(1); }
+    }
+
+    @keyframes popOut {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.5); opacity: 0; }
+    }
+
+    .game-target.hit {
+      animation: popOut 0.2s forwards;
+      pointer-events: none;
+    }
+
+    .game-score {
+      font-weight: 600;
+      color: #e94560;
+      font-size: 1.1rem;
+    }
+
+    .game-btn {
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ccc;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .game-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    .game-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      opacity: 0.6;
+      pointer-events: none;
+      letter-spacing: 2px;
+    }
+
+    .float-score {
+      position: absolute;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #e94560;
+      pointer-events: none;
+      animation: floatUp 0.6s forwards;
+    }
+
+    .float-score.golden { color: #f0c040; }
+
+    @keyframes floatUp {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-40px); }
+    }
   </style>
 </head>
 <body>
@@ -228,6 +338,17 @@
     </div>
 
     <div class="session-count">Sessions: <span id="count">0</span></div>
+
+    <div class="game-wrapper" id="game-wrapper">
+      <div class="game-header">
+        <span>BREAK GAME</span>
+        <span class="game-score">Score: <span id="game-score">0</span></span>
+        <button class="game-btn" id="game-toggle">START</button>
+      </div>
+      <div class="game-board" id="game-board">
+        <div class="game-msg" id="game-msg">Click START to play</div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -277,6 +398,14 @@
       tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
       document.body.classList.toggle('break-mode', mode !== 'work');
       updateDisplay();
+      // Show/hide game
+      const gw = document.getElementById('game-wrapper');
+      if (mode === 'work') {
+        gw.classList.remove('visible');
+        stopGame();
+      } else {
+        gw.classList.add('visible');
+      }
     }
 
     function start() {
@@ -392,6 +521,89 @@
     }
     updateClocks();
     setInterval(updateClocks, 1000);
+
+    // --- Break Game: Whack-a-Target ---
+    const gameBoard = document.getElementById('game-board');
+    const gameScoreEl = document.getElementById('game-score');
+    const gameToggle = document.getElementById('game-toggle');
+    const gameMsg = document.getElementById('game-msg');
+    let gameScore = 0;
+    let gameRunning = false;
+    let spawnTimer = null;
+    const EMOJIS = ['👀', '🎯', '⭐', '💥', '🔥', '👁️'];
+
+    function spawnTarget() {
+      if (!gameRunning) return;
+      const board = gameBoard.getBoundingClientRect();
+      const t = document.createElement('div');
+      const isGolden = Math.random() < 0.15;
+      t.className = 'game-target' + (isGolden ? ' golden' : '');
+      t.textContent = isGolden ? '⭐' : EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      const maxX = board.width - 60;
+      const maxY = board.height - 60;
+      t.style.left = (Math.random() * maxX + 5) + 'px';
+      t.style.top = (Math.random() * maxY + 5) + 'px';
+
+      const pts = isGolden ? 5 : 1;
+      t.addEventListener('click', (e) => {
+        e.stopPropagation();
+        t.classList.add('hit');
+        gameScore += pts;
+        gameScoreEl.textContent = gameScore;
+        // floating score
+        const f = document.createElement('div');
+        f.className = 'float-score' + (isGolden ? ' golden' : '');
+        f.textContent = '+' + pts;
+        f.style.left = t.style.left;
+        f.style.top = t.style.top;
+        gameBoard.appendChild(f);
+        setTimeout(() => f.remove(), 600);
+        setTimeout(() => t.remove(), 200);
+      });
+
+      gameBoard.appendChild(t);
+
+      // auto-remove if not clicked
+      const lifetime = 1200 + Math.random() * 800;
+      setTimeout(() => {
+        if (t.parentNode && !t.classList.contains('hit')) {
+          t.classList.add('hit');
+          setTimeout(() => t.remove(), 200);
+        }
+      }, lifetime);
+
+      // schedule next spawn
+      const delay = 400 + Math.random() * 600;
+      spawnTimer = setTimeout(spawnTarget, delay);
+    }
+
+    function startGame() {
+      gameRunning = true;
+      gameScore = 0;
+      gameScoreEl.textContent = '0';
+      gameMsg.style.display = 'none';
+      gameToggle.textContent = 'STOP';
+      // clear existing targets
+      gameBoard.querySelectorAll('.game-target, .float-score').forEach(el => el.remove());
+      spawnTarget();
+    }
+
+    function stopGame() {
+      gameRunning = false;
+      clearTimeout(spawnTimer);
+      gameToggle.textContent = 'START';
+      gameBoard.querySelectorAll('.game-target, .float-score').forEach(el => el.remove());
+      gameMsg.style.display = '';
+      if (gameScore > 0) {
+        gameMsg.textContent = 'Score: ' + gameScore + ' — Click START to play again';
+      } else {
+        gameMsg.textContent = 'Click START to play';
+      }
+    }
+
+    gameToggle.addEventListener('click', () => {
+      gameRunning ? stopGame() : startGame();
+    });
   </script>
 </body>
 </html>
