@@ -25,6 +25,18 @@
       padding: 3rem 2rem;
     }
 
+    .main-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .timer-section {
+      flex: 0 0 auto;
+    }
+
     h1 {
       font-size: 1.8rem;
       font-weight: 300;
@@ -189,11 +201,11 @@
       margin-bottom: 2rem;
     }
 
-    /* Break Game */
+    /* Break Game — Snake */
     .game-wrapper {
       display: none;
-      margin: 1.5rem auto;
-      max-width: 400px;
+      flex: 0 0 auto;
+      max-width: 420px;
     }
 
     .game-wrapper.visible { display: block; }
@@ -205,52 +217,6 @@
       margin-bottom: 0.8rem;
       font-size: 0.9rem;
       opacity: 0.7;
-    }
-
-    .game-board {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-
-    .game-target {
-      position: absolute;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: #e94560;
-      cursor: pointer;
-      transform: scale(0);
-      animation: popIn 0.2s forwards;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      user-select: none;
-      box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
-    }
-
-    .game-target.golden {
-      background: #f0c040;
-      box-shadow: 0 0 25px rgba(240, 192, 64, 0.5);
-    }
-
-    @keyframes popIn {
-      to { transform: scale(1); }
-    }
-
-    @keyframes popOut {
-      from { transform: scale(1); opacity: 1; }
-      to { transform: scale(1.5); opacity: 0; }
-    }
-
-    .game-target.hit {
-      animation: popOut 0.2s forwards;
-      pointer-events: none;
     }
 
     .game-score {
@@ -272,32 +238,47 @@
 
     .game-btn:hover { background: rgba(255, 255, 255, 0.2); }
 
-    .game-msg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+    #snake-canvas {
+      display: block;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+    }
+
+    .game-controls {
+      display: flex;
+      justify-content: center;
+      gap: 0.3rem;
+      margin-top: 0.8rem;
+    }
+
+    .game-controls .arrow-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .game-controls .arrow-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .arrow-btn {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ccc;
       font-size: 1.2rem;
-      opacity: 0.6;
-      pointer-events: none;
-      letter-spacing: 2px;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
-    .float-score {
-      position: absolute;
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #e94560;
-      pointer-events: none;
-      animation: floatUp 0.6s forwards;
-    }
-
-    .float-score.golden { color: #f0c040; }
-
-    @keyframes floatUp {
-      from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(-40px); }
-    }
+    .arrow-btn:hover { background: rgba(255, 255, 255, 0.15); }
+    .arrow-btn:active { background: rgba(255, 255, 255, 0.25); }
   </style>
 </head>
 <body>
@@ -310,43 +291,57 @@
     <div class="current-date" id="current-date"></div>
     <div class="current-date" id="current-tz" style="margin-top: 0.3rem;"></div>
 
-    <div class="mode-tabs">
-      <button class="mode-tab active" data-mode="work">Work</button>
-      <button class="mode-tab" data-mode="short">Short Break</button>
-      <button class="mode-tab" data-mode="long">Long Break</button>
-    </div>
+    <div class="main-row">
+      <div class="timer-section">
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="work">Work</button>
+          <button class="mode-tab" data-mode="short">Short Break</button>
+          <button class="mode-tab" data-mode="long">Long Break</button>
+        </div>
 
-    <div class="timer-ring">
-      <svg viewBox="0 0 280 280">
-        <circle class="ring-bg" cx="140" cy="140" r="132"/>
-        <circle class="ring-progress" cx="140" cy="140" r="132"/>
-      </svg>
-      <div class="timer-display">25:00</div>
-    </div>
+        <div class="timer-ring">
+          <svg viewBox="0 0 280 280">
+            <circle class="ring-bg" cx="140" cy="140" r="132"/>
+            <circle class="ring-progress" cx="140" cy="140" r="132"/>
+          </svg>
+          <div class="timer-display">25:00</div>
+        </div>
 
-    <div class="controls">
-      <button class="btn btn-reset" title="Reset">
-        <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18a6 6 0 1 1 0-12c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
-      <button class="btn btn-start" title="Start">
-        <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button class="btn btn-skip" title="Skip">
-        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6v12h2V6h-2z"/></svg>
-      </button>
-    </div>
+        <div class="controls">
+          <button class="btn btn-reset" title="Reset">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18a6 6 0 1 1 0-12c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          </button>
+          <button class="btn btn-start" title="Start">
+            <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="btn btn-skip" title="Skip">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6v12h2V6h-2z"/></svg>
+          </button>
+        </div>
 
-    <div class="session-count">Sessions: <span id="count">0</span></div>
-
-    <div class="game-wrapper" id="game-wrapper">
-      <div class="game-header">
-        <span>BREAK GAME</span>
-        <span class="game-score">Score: <span id="game-score">0</span></span>
-        <button class="game-btn" id="game-toggle">START</button>
+        <div class="session-count">Sessions: <span id="count">0</span></div>
       </div>
-      <div class="game-board" id="game-board">
-        <div class="game-msg" id="game-msg">Click START to play</div>
+
+      <div class="game-wrapper" id="game-wrapper">
+        <div class="game-header">
+          <span>SNAKE</span>
+          <span class="game-score">Score: <span id="game-score">0</span></span>
+          <button class="game-btn" id="game-toggle">START</button>
+        </div>
+        <canvas id="snake-canvas" width="400" height="300"></canvas>
+        <div class="game-controls">
+          <div class="arrow-grid">
+            <div class="arrow-row">
+              <button class="arrow-btn" data-dir="up">&#9650;</button>
+            </div>
+            <div class="arrow-row">
+              <button class="arrow-btn" data-dir="left">&#9664;</button>
+              <button class="arrow-btn" data-dir="down">&#9660;</button>
+              <button class="arrow-btn" data-dir="right">&#9654;</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -522,88 +517,167 @@
     updateClocks();
     setInterval(updateClocks, 1000);
 
-    // --- Break Game: Whack-a-Target ---
-    const gameBoard = document.getElementById('game-board');
+    // --- Break Game: Snake ---
+    const canvas = document.getElementById('snake-canvas');
+    const ctx = canvas.getContext('2d');
     const gameScoreEl = document.getElementById('game-score');
     const gameToggle = document.getElementById('game-toggle');
-    const gameMsg = document.getElementById('game-msg');
-    let gameScore = 0;
-    let gameRunning = false;
-    let spawnTimer = null;
-    const EMOJIS = ['👀', '🎯', '⭐', '💥', '🔥', '👁️'];
+    const TILE = 20;
+    const COLS = canvas.width / TILE;
+    const ROWS = canvas.height / TILE;
+    let snake, dir, nextDir, food, gameScore, gameLoop, gameRunning;
 
-    function spawnTarget() {
-      if (!gameRunning) return;
-      const board = gameBoard.getBoundingClientRect();
-      const t = document.createElement('div');
-      const isGolden = Math.random() < 0.15;
-      t.className = 'game-target' + (isGolden ? ' golden' : '');
-      t.textContent = isGolden ? '⭐' : EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-      const maxX = board.width - 60;
-      const maxY = board.height - 60;
-      t.style.left = (Math.random() * maxX + 5) + 'px';
-      t.style.top = (Math.random() * maxY + 5) + 'px';
+    function initSnake() {
+      const cx = Math.floor(COLS / 2);
+      const cy = Math.floor(ROWS / 2);
+      snake = [{ x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      gameScore = 0;
+      gameScoreEl.textContent = '0';
+      placeFood();
+    }
 
-      const pts = isGolden ? 5 : 1;
-      t.addEventListener('click', (e) => {
-        e.stopPropagation();
-        t.classList.add('hit');
-        gameScore += pts;
-        gameScoreEl.textContent = gameScore;
-        // floating score
-        const f = document.createElement('div');
-        f.className = 'float-score' + (isGolden ? ' golden' : '');
-        f.textContent = '+' + pts;
-        f.style.left = t.style.left;
-        f.style.top = t.style.top;
-        gameBoard.appendChild(f);
-        setTimeout(() => f.remove(), 600);
-        setTimeout(() => t.remove(), 200);
-      });
+    function placeFood() {
+      do {
+        food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+      } while (snake.some(s => s.x === food.x && s.y === food.y));
+    }
 
-      gameBoard.appendChild(t);
-
-      // auto-remove if not clicked
-      const lifetime = 1200 + Math.random() * 800;
-      setTimeout(() => {
-        if (t.parentNode && !t.classList.contains('hit')) {
-          t.classList.add('hit');
-          setTimeout(() => t.remove(), 200);
+    function draw() {
+      // background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= COLS; i++) {
+        ctx.beginPath(); ctx.moveTo(i * TILE, 0); ctx.lineTo(i * TILE, canvas.height); ctx.stroke();
+      }
+      for (let i = 0; i <= ROWS; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i * TILE); ctx.lineTo(canvas.width, i * TILE); ctx.stroke();
+      }
+      // food
+      ctx.fillStyle = '#e94560';
+      ctx.shadowColor = '#e94560';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(food.x * TILE + TILE / 2, food.y * TILE + TILE / 2, TILE / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // snake
+      snake.forEach((seg, i) => {
+        const alpha = 1 - (i / snake.length) * 0.5;
+        ctx.fillStyle = i === 0 ? '#0f3460' : `rgba(15, 52, 96, ${alpha})`;
+        ctx.fillRect(seg.x * TILE + 1, seg.y * TILE + 1, TILE - 2, TILE - 2);
+        if (i === 0) {
+          ctx.fillStyle = '#4cc9f0';
+          ctx.fillRect(seg.x * TILE + 2, seg.y * TILE + 2, TILE - 4, TILE - 4);
         }
-      }, lifetime);
+      });
+    }
 
-      // schedule next spawn
-      const delay = 400 + Math.random() * 600;
-      spawnTimer = setTimeout(spawnTarget, delay);
+    function drawMessage(text, sub) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 24px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2 - 10);
+      if (sub) {
+        ctx.font = '14px "Segoe UI", sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText(sub, canvas.width / 2, canvas.height / 2 + 20);
+      }
+      ctx.textAlign = 'start';
+    }
+
+    function tick() {
+      dir = { ...nextDir };
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+      // wall collision
+      if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+        gameOver();
+        return;
+      }
+      // self collision
+      if (snake.some(s => s.x === head.x && s.y === head.y)) {
+        gameOver();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        gameScore++;
+        gameScoreEl.textContent = gameScore;
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      clearInterval(gameLoop);
+      draw();
+      drawMessage('GAME OVER', 'Score: ' + gameScore + ' — Press START to retry');
+      gameToggle.textContent = 'START';
     }
 
     function startGame() {
+      initSnake();
       gameRunning = true;
-      gameScore = 0;
-      gameScoreEl.textContent = '0';
-      gameMsg.style.display = 'none';
       gameToggle.textContent = 'STOP';
-      // clear existing targets
-      gameBoard.querySelectorAll('.game-target, .float-score').forEach(el => el.remove());
-      spawnTarget();
+      draw();
+      gameLoop = setInterval(tick, 130);
     }
 
     function stopGame() {
       gameRunning = false;
-      clearTimeout(spawnTimer);
+      clearInterval(gameLoop);
       gameToggle.textContent = 'START';
-      gameBoard.querySelectorAll('.game-target, .float-score').forEach(el => el.remove());
-      gameMsg.style.display = '';
-      if (gameScore > 0) {
-        gameMsg.textContent = 'Score: ' + gameScore + ' — Click START to play again';
-      } else {
-        gameMsg.textContent = 'Click START to play';
-      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawMessage('SNAKE', 'Press START to play');
     }
+
+    // keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (!gameRunning) return;
+      switch (e.key) {
+        case 'ArrowUp': case 'w': case 'W':
+          if (dir.y !== 1) nextDir = { x: 0, y: -1 }; break;
+        case 'ArrowDown': case 's': case 'S':
+          if (dir.y !== -1) nextDir = { x: 0, y: 1 }; break;
+        case 'ArrowLeft': case 'a': case 'A':
+          if (dir.x !== 1) nextDir = { x: -1, y: 0 }; break;
+        case 'ArrowRight': case 'd': case 'D':
+          if (dir.x !== -1) nextDir = { x: 1, y: 0 }; break;
+      }
+    });
+
+    // touch/click arrow controls
+    document.querySelectorAll('.arrow-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!gameRunning) return;
+        switch (btn.dataset.dir) {
+          case 'up': if (dir.y !== 1) nextDir = { x: 0, y: -1 }; break;
+          case 'down': if (dir.y !== -1) nextDir = { x: 0, y: 1 }; break;
+          case 'left': if (dir.x !== 1) nextDir = { x: -1, y: 0 }; break;
+          case 'right': if (dir.x !== -1) nextDir = { x: 1, y: 0 }; break;
+        }
+      });
+    });
 
     gameToggle.addEventListener('click', () => {
       gameRunning ? stopGame() : startGame();
     });
+
+    // initial draw
+    drawMessage('SNAKE', 'Press START to play');
   </script>
 </body>
 </html>
