@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pomodoro Timer</title>
+  <title>TAREK IS WATCHING YOU</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -177,7 +177,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Pomodoro</h1>
+    <h1>TAREK IS WATCHING YOU</h1>
 
     <div class="clocks" id="clocks"></div>
 
@@ -247,7 +247,7 @@
       display.textContent = formatTime(remainingSeconds);
       const fraction = 1 - remainingSeconds / totalSeconds;
       progress.style.strokeDashoffset = fraction * CIRCUMFERENCE;
-      document.title = `${formatTime(remainingSeconds)} — Pomodoro`;
+      document.title = `${formatTime(remainingSeconds)} — TAREK IS WATCHING YOU`;
     }
 
     function setMode(mode) {
@@ -284,7 +284,7 @@
 
     function onComplete() {
       if (Notification.permission === 'granted') {
-        new Notification('Pomodoro', {
+        new Notification('TAREK IS WATCHING YOU', {
           body: currentMode === 'work' ? 'Time for a break!' : 'Back to work!',
         });
       }
