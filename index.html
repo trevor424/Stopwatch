@@ -198,6 +198,7 @@
 
     <div class="current-time" id="current-time"></div>
     <div class="current-date" id="current-date"></div>
+    <div class="current-date" id="current-tz" style="margin-top: 0.3rem;"></div>
 
     <div class="mode-tabs">
       <button class="mode-tab active" data-mode="work">Work</button>
@@ -357,6 +358,9 @@
 
     const currentTimeEl = document.getElementById('current-time');
     const currentDateEl = document.getElementById('current-date');
+    const currentTzEl = document.getElementById('current-tz');
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    currentTzEl.textContent = 'YOUR LOCAL TIME — ' + localTz.replace('_', ' ').toUpperCase();
 
     function updateClocks() {
       const now = new Date();
