@@ -398,13 +398,13 @@
       tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
       document.body.classList.toggle('break-mode', mode !== 'work');
       updateDisplay();
-      // Show/hide game
+      // Show/hide game — only on Short Break
       const gw = document.getElementById('game-wrapper');
-      if (mode === 'work') {
+      if (mode === 'short') {
+        gw.classList.add('visible');
+      } else {
         gw.classList.remove('visible');
         stopGame();
-      } else {
-        gw.classList.add('visible');
       }
     }
 
